@@ -52,4 +52,30 @@ def phase_df(df, isplot=False):
         plt.plot(xcorr)
 
     dt = np.arange(1-nsamp, nsamp)
-    return dt[xcorr.argmax(axis=0)]
+    return -dt[xcorr.argmax(axis=0)]
+
+
+def calc_features(df_dict, fnames):
+
+    freq = []
+    peaks = []
+    phase = []
+    for fn in fnames:
+        df = df_dict[fn]
+
+        _, _, fc = fft_df(df)
+        freq.append(fc[::-1])
+
+        peaks.append( meanpeaks_df(df, 0.5) )
+
+        phase.append( phase_df(df) )
+
+    peak_cols = df.columns.values.tolist()
+    phase_cols = ['p_%s' % s for s in peak_cols]
+    columns = peak_cols + ['f1', 'f2'] + phase_cols
+
+    arr = np.concatenate((peaks, freq, phase), axis=1)
+    df_out = pd.DataFrame(arr, index=fnames, 
+        columns=columns)
+
+    return df_out
