@@ -1,9 +1,9 @@
 <script>
-code_show=true; 
-
-$('div.prompt').hide();
+var code_show=true; //true -> hide code at first
 
 function code_toggle() {
+	$('div.prompt').hide(); // always hide prompt
+
  	if (code_show){
  		$('div.input').hide();
  	} else {
