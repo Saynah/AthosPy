@@ -97,3 +97,17 @@ def label_csvs_in_dir(data_dir):
 #                     print 'ignored file: ', csvPath
                 count_ign += 1
 
+
+def csv_summary(file_path):
+    df = load_emg_df(file_path) # load only EMG data
+    
+    len_df = len(df)
+    
+    summary = {
+        "Length" : len_df,
+        "Median" : df.unstack().median(),
+        "Max" : df[df<15000].unstack().max(),
+        "MaxFrac_zero" : max((df==0).sum().divide(len_df) * 100),
+        "MaxFrac_repeat" : max(((df!=0) & (df.diff()==0)).sum().divide(len_df) * 100)
+    }
+    return summary

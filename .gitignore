@@ -53,6 +53,6 @@ docs/_build/
 # PyBuilder
 target/
 
-# IPython notebook checkpoints
+# IPython notebook (would like to set images to be saved in a separate folder so that I can version control the json notebook itself)
 .ipynb_checkpoints
-
+*.ipynb
