@@ -1,18 +1,18 @@
 <script>
-var code_show=true; //true -> hide code at first
+	var code_show=true; //true -> hide code at first
 
-function code_toggle() {
-	$('div.prompt').hide(); // always hide prompt
+	function code_toggle() {
+		$('div.prompt').hide(); // always hide prompt
+		// must be inside function to hide prompt upon show code
 
- 	if (code_show){
- 		$('div.input').hide();
- 	} else {
- 		$('div.input').show();
- 	}
- 	code_show = !code_show
-} 
-
-$( document ).ready(code_toggle);
+		if (code_show){
+			$('div.input').hide();
+		} else {
+			$('div.input').show();
+		}
+		code_show = !code_show
+	}
+	$( document ).ready(code_toggle);
 </script>
 
 <a href="javascript:code_toggle()">Click here</a> to toggle the display of code.
