@@ -2,6 +2,7 @@ import os
 import re
 import pandas as pd
 import fnmatch
+import difflib
 
 
 def label_folders(basepath, write_path):
@@ -19,6 +20,7 @@ def label_folders(basepath, write_path):
 
     df = _to_dataframe(folder_labels, names)
     df['Path'] = paths
+    df['Person_id'] = _name_to_id(df.First_Last)
     return _select_parsed(df, write_path)
 
 
@@ -29,7 +31,8 @@ def label_all_csvfiles(basepath, folders, write_path):
     # create table for all csv-files
     subdir__ix = zip(folders.Path, folders.index)
     df_list = [label_csvfiles(subdir, ix) for subdir, ix in subdir__ix]
-    files = pd.concat(df_list, ignore_index=True)   # concatenate data frames for all subdirectoriees
+    # concatenate data frames for all subdirectoriees
+    files = pd.concat(df_list, ignore_index=True)
     return _select_parsed(files, write_path)
 
 
@@ -51,6 +54,15 @@ def label_csvfiles(basepath, id):
     return df
 
 
+def get_best_match(item, possible):
+    cutoff = 0.5
+    n_match = 1
+    match = difflib.get_close_matches(item, possible, n_match, cutoff)
+    if match:
+        return match[0]  # upack
+    return None
+
+
 # Move to file_ops.py ?
 ###############################################
 
@@ -69,7 +81,7 @@ def parse_folder_name(folder_name):
 
 def parse_csv_name(csv_name):
     '''extract person name, excercise name, leg side, number, and suffix labels'''
-    names = ['LastFirst', 'Exercise', 'Legside', 'Numerical', 'Sufffix']
+    names = ['LastFirst', 'Exercise', 'Legside', 'Resistance', 'Sufffix']
 
     # try requiring the tag for leg-side
     labels = re.findall(r"^([a-zA-Z ]+)(?:_| _)([A-Za-z]+)_?([LR])(\d*)(.{0,4})\.csv$",
@@ -106,3 +118,11 @@ def _select_parsed(df, write_path):
     return parsed
 
 
+def _name_to_id(S_name):
+    '''replace names in series with numberical identifiers
+    '''
+    name_unq = S_name.unique()
+    left = pd.DataFrame({'name':S_name})
+    right = pd.DataFrame({'name': name_unq,
+                          'id': range(len(name_unq))})
+    return pd.merge(left,right)['id']
