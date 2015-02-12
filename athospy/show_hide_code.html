@@ -15,4 +15,40 @@
 	$( document ).ready(code_toggle);
 </script>
 
-<a href="javascript:code_toggle()">Click here</a> to toggle the display of code.
+<div id="toggle-link">
+	<a href="javascript:code_toggle()">[Toggle Code]</a>
+</div>
+
+
+<!-- get rid of "Notebook title" -->
+<script>
+	document.title = "Mark Sena";
+</script>
+
+
+<!-- makes HTML output windows smaller -->
+<!-- TODO: why do I need to use $(document).ready() to make this work? -->
+<script>
+	function shrink_outwin () {
+		$('table.dataframe').parent().css("max-height","150px");
+	}
+	$( document ).ready(shrink_outwin);
+</script>
+
+
+<!-- Toggle the display of code -->
+<script>
+  $('#toggle-link').css({
+    "position": "absolute",
+    "width": "100px",
+    "background-color": "white",
+    "margin-left": "-105px"
+  });
+</script>
+
+<script>
+  $(window).scroll(function() {
+      var scrollTop = $(window).scrollTop();
+      $("#toggle-link").css("top", scrollTop + "px");
+  });
+</script>
