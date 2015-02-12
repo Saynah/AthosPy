@@ -4,19 +4,9 @@ import pandas as pd
 import fnmatch
 
 
-def select_parsed(df, write_path):
-    '''Save record of all items in DataFrame.
-    Return only items that were successfully parsed.
-    '''
-    df.to_csv(write_path)
-    parsed = df[df.iloc[:, 1].notnull()]
-    print 'Parsed %d of %d items. See record at "%s"' % (
-        len(parsed), len(df), write_path)
-    return parsed
-
-
-def label_folders(basepath):
+def label_folders(basepath, write_path):
     '''Return dataframe containing labels parsed from sub-folders directly under basepath.
+    Write a record of what was done to disk.
     '''
     folder_labels = []
     paths = []
@@ -29,17 +19,18 @@ def label_folders(basepath):
 
     df = _to_dataframe(folder_labels, names)
     df['Path'] = paths
-    return df
+    return _select_parsed(df, write_path)
 
 
-# def label_files(basepath, folders):
-#     # create table for all csv-files
-#     subdir__ix = zip(folders.Path, folders.index)
-#     df_list = [my.label_csvfiles(subdir, ix) for subdir, ix in subdir__ix]
-#     files = pandas.concat(df_list, ignore_index=True)   # concatenate data frames for all subdirectoriees
-    
-#     return select_parsed(files, '../data/parsed_files.csv')
-#     # files.head()                                    # Athos, uncomment to preview table
+def label_all_csvfiles(basepath, folders, write_path):
+    '''Return dataframe for all csv files under basepath, with a column for folder ids
+    Write a record of what was done to disk.
+    '''
+    # create table for all csv-files
+    subdir__ix = zip(folders.Path, folders.index)
+    df_list = [label_csvfiles(subdir, ix) for subdir, ix in subdir__ix]
+    files = pd.concat(df_list, ignore_index=True)   # concatenate data frames for all subdirectoriees
+    return _select_parsed(files, write_path)
 
 
 def label_csvfiles(basepath, id):
@@ -59,6 +50,9 @@ def label_csvfiles(basepath, id):
     df['Folder_id'] = [id] * len(df)       # add index to parent folder
     return df
 
+
+# Move to file_ops.py ?
+###############################################
 
 def parse_folder_name(folder_name):
     '''extract first and last name of person and trial/fitness/push numbers from foldre name'''
@@ -88,39 +82,24 @@ def parse_csv_name(csv_name):
     return [None] * len(names), names
 
 
-def list_csvs(basepath):
-    csvpath = []
-    for root, dirnames, fnames in os.walk(basepath):
-        for fn in fnmatch.filter(fnames, '*.csv'):
-            csvpath.append(os.path.join(root, fn))
-
-    return csvpath
-
-
-def parse_labels(str_list, regexp, columns):
-    '''extract labels captured by the regex into a data frame'''
-    labels = []
-    for s in str_list:
-        captured = re.findall(regexp, s)
-        if captured:
-            elements = captured[0]
-            if type(elements) == tuple:
-                # convert tuple to list
-                labels.append(list(elements))
-            else:
-                # enclose single element in list
-                labels.append([elements])
-        else:
-            labels.append([None] * len(columns))
-
-    if len(labels) == 0:
-        return []
-    else:
-        return pd.DataFrame(labels, index=str_list, columns=columns)
-
+# Helper functions
+###################################################
 
 def _to_dataframe(labels, names):
     if len(labels) == 0:
         return []
     else:
         return pd.DataFrame(labels, columns=names)
+
+
+def _select_parsed(df, write_path):
+    '''Save record of all items in DataFrame.
+    Return only items that were successfully parsed.
+    '''
+    df.to_csv(write_path)
+    parsed = df[df.iloc[:, 1].notnull()]
+    print 'Parsed %d of %d items. See record at "%s"' % (
+        len(parsed), len(df), write_path)
+    return parsed
+
+
