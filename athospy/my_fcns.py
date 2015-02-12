@@ -55,9 +55,12 @@ def label_csvfiles(basepath, id):
 ###############################################
 
 def parse_folder_name(folder_name):
-    '''extract first and last name of person and trial/fitness/push numbers from foldre name'''
-    names = ['First', 'Last', 'Trial', 'Fitness', 'Push']
-    labels = re.findall(r"^([a-zA-Z]*)_(?:[a-zA-Z]*_)?([a-zA-Z]*)[_ ]Calib.*[_ ]Trial(\d*)[_ ]Fitness(\d*)[_ ]Push(\d*)$",
+    '''extract name of person and trial/fitness/push numbers from folder name'''
+    # names = ['First', 'Last', 'Trial', 'Fitness', 'Push']
+    # labels = re.findall(r"^([a-zA-Z]*)_(?:[a-zA-Z]*_)?([a-zA-Z]*)[_ ]Calib.*[_ ]Trial(\d*)[_ ]Fitness(\d*)[_ ]Push(\d*)$",
+    #                     folder_name)
+    names = ['First_Last', 'Trial', 'Fitness', 'Push']
+    labels = re.findall(r"^([a-zA-Z]*_(?:[a-zA-Z]*_)?[a-zA-Z]*)[_ ]Calib.*[_ ]Trial(\d*)[_ ]Fitness(\d*)[_ ]Push(\d*)$",
                         folder_name)
     if labels:
         return list(labels[0]), names
