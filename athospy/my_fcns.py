@@ -3,9 +3,10 @@ import re
 import pandas as pd
 import fnmatch
 import difflib
+import shutil
 
 
-def label_folders(basepath, write_path):
+def label_folders(basepath, write_dst):
     '''Return dataframe containing labels parsed from sub-folders directly under basepath.
     Write a record of what was done to disk.
     '''
@@ -21,10 +22,10 @@ def label_folders(basepath, write_path):
     df = _to_dataframe(folder_labels, names)
     df['Path'] = paths
     df['Person_id'] = _name_to_id(df.First_Last)
-    return _select_parsed(df, write_path)
+    return _select_parsed(df, write_dst)
 
 
-def label_all_csvfiles(basepath, folders, write_path):
+def label_all_csvfiles(basepath, folders, write_dst):
     '''Return dataframe for all csv files under basepath, with a column for folder ids
     Write a record of what was done to disk.
     '''
@@ -33,7 +34,7 @@ def label_all_csvfiles(basepath, folders, write_path):
     df_list = [label_csvfiles(subdir, ix) for subdir, ix in subdir__ix]
     # concatenate data frames for all subdirectoriees
     files = pd.concat(df_list, ignore_index=True)
-    return _select_parsed(files, write_path)
+    return _select_parsed(files, write_dst)
 
 
 def label_csvfiles(basepath, id):
@@ -54,7 +55,22 @@ def label_csvfiles(basepath, id):
     return df
 
 
+def rename_csvfiles(write_dst, df_files):
+    '''rename csv files by file index
+    '''
+    shutil.rmtree(write_dst)
+    os.mkdir(write_dst)
+
+    ix__path = zip(df_files.index, df_files.Path)
+    for ix, src in ix__path:
+        fn_new = str(ix) + '.csv'
+        dst = os.path.join(write_dst, fn_new)
+        shutil.copy(src, dst)
+
+
 def get_best_match(item, possible):
+    '''Return the best matching string in the possible list.
+    Otherwise return the original'''
     cutoff = 0.5
     n_match = 1
     match = difflib.get_close_matches(item, possible, n_match, cutoff)
@@ -107,14 +123,14 @@ def _to_dataframe(labels, names):
         return pd.DataFrame(labels, columns=names)
 
 
-def _select_parsed(df, write_path):
+def _select_parsed(df, write_dst):
     '''Save record of all items in DataFrame.
     Return only items that were successfully parsed.
     '''
-    df.to_csv(write_path)
+    df.to_csv(write_dst)
     parsed = df[df.iloc[:, 1].notnull()]
     print 'Parsed %d of %d items. See record at "%s"' % (
-        len(parsed), len(df), write_path)
+        len(parsed), len(df), write_dst)
     return parsed
 
 
