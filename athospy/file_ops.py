@@ -5,6 +5,8 @@ import difflib          # soft string matching
 import json
 import fnmatch          # 
 
+# DEPRECATED. Use fileops
+
 EXER_LIST = '../config/exercise-list_short'
 PERS_LIST = '../config/person-list'
 
@@ -31,15 +33,14 @@ f.close()
 
 
 def load_emg_df(csv_path):
-    """Load EMG data from the specified CSV file as a pandas data frame"""
-
+    '''Load EMG data from the specified CSV file as a pandas data frame
+    '''
     _, ext = os.path.splitext(csv_path)
     assert ext == '.csv', 'extension must be .csv, not "%s"' % ext
     
     df = pd.read_csv(csv_path, header=0)
-
-    # reorder columns for left/right: glut, ham, lat/med: quad
     df = df.loc[:,['LGM', 'LBF', 'LVL', 'LVM', 'RGM', 'RBF', 'RVL', 'RVM']]
+    # reorder columns for left/right: glut, ham, lat/med: quad
 
     return df
 
@@ -105,8 +106,9 @@ def csv_summary(file_path):
     
     summary = {
         "Length" : len_df,
-        "Median" : df.unstack().median(),
         "Max" : df[df<15000].unstack().max(),
+        "Median" : df.unstack().median(),
+        "n_spikes" : (df>65000).sum().sum(),
         "MaxFrac_zero" : max((df==0).sum().divide(len_df) * 100),
         "MaxFrac_repeat" : max(((df!=0) & (df.diff()==0)).sum().divide(len_df) * 100)
     }
