@@ -83,22 +83,56 @@ def get_best_match(item, possible):
     return None
 
 
-def load_and_plot(df_files):
-    '''Loads and plots the csv files in df_files.
+def load_and_plot(df_files, write_dir='', plot_on=True):
+    '''Loads and plots the csv files in df_files. Optionally saves pdf.
     Labels are used as the title'''
     for i in df_files.index:
         row = df_files.ix[i]
         df = fop.load_emg(row.Path)
         title = str(row.tolist())
-        viz.plot_emg(df, title=title)
+        fig, _ = viz.plot_emg(df, title=title)
+
+        if write_dir:
+            try: os.mkdir(write_dir)
+            except: pass
+            fig.savefig(os.path.join(write_dir, str(i) + '.pdf'))
+            if not plot_on:
+                viz.plt.close()
+
 
 
 def check_quality(df_files):
+    '''Compile quality metrics into a dataframe and plot their distrubution
+    '''
     d_summ = []
     for path in df_files.Path:
         d_summ.append(calcs.quality(path))
-        
-    return pd.DataFrame(d_summ, index=df_files.index)
+
+    files_qc = pd.DataFrame(d_summ, index=df_files.index)
+    viz.plot_qc(files_qc)
+
+    return files_qc
+
+
+def exclude(df, files_qc, write_dst='../files_dirty.csv'):
+    '''Remove files that don't match the quality criteria.
+    '''
+    len_old = len(df)
+
+    short = files_qc.Length < 500
+    repeats = files_qc.MaxFrac_repeat > 60
+    zeros = files_qc.MaxFrac_zero > 30
+    noisy = files_qc.Median > 100
+
+    is_bad = short | repeats | zeros | noisy
+    df_dirty = df[is_bad]
+    df_dirty.to_csv(write_dst)
+
+    df = df[~is_bad]
+    print 'excluded %d files of %d' % (len_old - len(df), len_old)
+
+    return df
+
 
 # Helper functions
 ###################################################
@@ -132,21 +166,21 @@ def _name_to_id(S_name):
     return pd.merge(left, right)['id']
 
 
-def _rename_csvfiles(df_files, write_dst):
+def _rename_csvfiles(df_files, write_dir):
     '''rename csv files by file index
     '''
-    shutil.rmtree(write_dst)
-    os.mkdir(write_dst)
+    shutil.rmtree(write_dir)
+    os.mkdir(write_dir)
 
     path_new = []
     ix__path = zip(df_files.index, df_files.Path)
     for ix, src in ix__path:
-        dst = os.path.join(write_dst, str(ix) + '.csv')
+        dst = os.path.join(write_dir, str(ix) + '.csv')
         shutil.copy(src, dst)
         path_new.append(dst)
 
-    print 'Copied %d files and renamed by file_id. See %s' % (
-        len(df_files), write_dst)
+    print 'Copied %d files and renamed by file_id. See "%s"' % (
+        len(df_files), write_dir)
 
     df_files.Path = path_new
     return df_files

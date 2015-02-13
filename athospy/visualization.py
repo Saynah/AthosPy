@@ -12,6 +12,7 @@ def set_styles():
     mpl.rc('xtick', labelsize=12) 
     mpl.rc('ytick', labelsize=12)
     mpl.rc('font', size=12)
+    mpl.rc('axes', titlesize=13)
 
 
 def plot_emg(df, title=''):
@@ -34,4 +35,20 @@ def plot_emg(df, title=''):
     
     plt.suptitle(title)
     
+    return fig, ax
+
+
+def plot_qc(df_qc):
+    '''Plot distribution of quality metrics across files.
+    '''
+    y = np.random.randn(len(df_qc))
+    fig, ax = plt.subplots(df_qc.shape[1], figsize=(16, 6))
+    for i, axi in enumerate(ax):
+        axi.scatter(df_qc.iloc[:,i], y)
+
+        axi.set_title(df_qc.columns[i])
+        axi.set_yticks([])
+        axi.get_xaxis().set_tick_params(direction='in')
+        fig.tight_layout(pad=0.4)
+
     return fig, ax
