@@ -7,11 +7,11 @@ import fnmatch          #
 
 # DEPRECATED. Use fileops
 
-EXER_LIST = '../config/exercise-list_short'
-PERS_LIST = '../config/person-list'
+EXER_LIST = 'config/exercise-list_short.txt'
+PERS_LIST = 'config/person-list'
 
-exer_map = _load_json(EXER_LIST)
-pers_map = _load_json(PERS_LIST)
+# exer_map = _load_json(EXER_LIST)
+# pers_map = _load_json(PERS_LIST)
 
 f = open(EXER_LIST)
 exercise_set = set()
