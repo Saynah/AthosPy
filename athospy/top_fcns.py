@@ -3,10 +3,11 @@ import pandas as pd
 import fnmatch
 import difflib
 import shutil
+import numpy as np
 
 # athospy packages
 import visualization as viz
-import calcs
+import calcs as clc
 import fileops as fop
 
 
@@ -100,13 +101,12 @@ def load_and_plot(df_files, write_dir='', plot_on=True):
                 viz.plt.close()
 
 
-
 def check_quality(df_files):
     '''Compile quality metrics into a dataframe and plot their distrubution
     '''
     d_summ = []
     for path in df_files.Path:
-        d_summ.append(calcs.quality(path))
+        d_summ.append(clc.quality(path))
 
     files_qc = pd.DataFrame(d_summ, index=df_files.index)
     viz.plot_qc(files_qc)
@@ -114,8 +114,9 @@ def check_quality(df_files):
     return files_qc
 
 
-def exclude(df, files_qc, write_dst='../files_dirty.csv'):
+def exclude_by_quality(df, files_qc, write_dst='../files_dirty.csv'):
     '''Remove files that don't match the quality criteria.
+    Also keep a record of the removed "dirty files"
     '''
     len_old = len(df)
 
@@ -133,6 +134,63 @@ def exclude(df, files_qc, write_dst='../files_dirty.csv'):
 
     return df
 
+
+def split_by_personid(files, frac_apprx):
+    '''Split files into two parts by person id.
+    '''
+    n_persons = len(files.Person_id.unique())
+    n_left = int(frac_apprx * n_persons)
+    files_left = files[files.Person_id < n_left]
+    files_right = files[files.Person_id > n_left]
+
+    return files_left, files_right
+
+
+def sample_data(files, n_sec):
+    '''Create dictionary of sampled data, with file ids as keys.
+    '''
+    # TODO: allow input of single series?
+    n_samp = int(41.7 * n_sec)
+
+    data_dict = {}
+    ix__path = zip(files.index, files.Path)
+    for ix, csv_path in ix__path:
+        df = fop.load_emg(csv_path)
+
+        i_mid = len(df) // 2
+        i_start = i_mid - n_samp // 2
+        i_end = i_mid + n_samp // 2
+
+        data_dict[ix] = df.iloc[i_start:i_end]
+    
+    return data_dict
+
+
+def get_features(data_dict, standardize=True):
+    '''id instead of fnames...'''
+    freq, peaks, phase = [], [], []
+    for fid in data_dict.iterkeys():
+        df = data_dict[fid]
+
+        _, _, fc = clc.fft_df(df)
+        freq.append(fc[::-1])
+
+        peaks.append(clc.meanpeaks_df(df, 0.5))
+
+        phase.append(clc.phase_df(df))
+
+    peak_cols = df.columns.values.tolist()
+    phase_cols = ['p_%s' % s for s in peak_cols]
+    columns = peak_cols + ['f1', 'f2'] + phase_cols
+
+    arr = np.concatenate((peaks, freq, phase), axis=1)
+    f_df = pd.DataFrame(arr,
+                        index=data_dict.keys(),
+                        columns = columns)
+    if standardize:
+        f_df = (f_df - f_df.mean()) / f_df.std()
+
+    return f_df
 
 # Helper functions
 ###################################################
