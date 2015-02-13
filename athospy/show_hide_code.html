@@ -1,18 +1,26 @@
 <script>
-var code_show=true; //true -> hide code at first
+	var code_show=true; //true -> hide code at first
 
-function code_toggle() {
-	$('div.prompt').hide(); // always hide prompt
+	function code_toggle() {
+		$('div.prompt').hide(); // always hide prompt
 
- 	if (code_show){
- 		$('div.input').hide();
- 	} else {
- 		$('div.input').show();
- 	}
- 	code_show = !code_show
-} 
-
-$( document ).ready(code_toggle);
+		if (code_show){
+			$('div.input').hide();
+		} else {
+			$('div.input').show();
+		}
+		code_show = !code_show
+	}
+	$( document ).ready(code_toggle);
 </script>
 
-<a href="javascript:code_toggle()">Click here</a> to toggle the display of code.
+<div id="toggle-link">
+	<a href="javascript:code_toggle()">[Toggle Code]</a>
+	<br>
+	<br>
+	<a href="https://docs.google.com/presentation/d/16VGQncE7Uz-_38tVHIX4NBpaHcjfUyQlR6D-v4UE5z0/pub?start=false&loop=false&delayms=60000" target="_blank">[Slides]</a>
+	<br>
+	<a href="https://bitbucket.org/msena/athospy/src" target="_blank">[Bitbucket]</a>
+	<br>
+	<a href="https://www.linkedin.com/in/marksena" target="_blank">[LinkedIn]</a>
+</div>
