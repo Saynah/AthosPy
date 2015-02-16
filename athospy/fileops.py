@@ -46,3 +46,21 @@ def parse_csv_name(csv_name):
     return [None] * len(names), names
 
 
+def sample_data(files, n_sec):
+    '''Create dictionary of sampled data, with file ids as keys.
+    '''
+    # TODO: allow input of single series instead of dataframe?
+    n_samp = int(41.7 * n_sec)
+
+    data_dict = {}
+    ix__path = zip(files.index, files.Path)
+    for ix, csv_path in ix__path:
+        df = load_emg(csv_path)
+
+        i_mid = len(df) // 2
+        i_start = i_mid - n_samp // 2
+        i_end = i_mid + n_samp // 2
+
+        data_dict[ix] = df.iloc[i_start:i_end]
+    
+    return data_dict

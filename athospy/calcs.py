@@ -1,3 +1,5 @@
+from __future__ import division
+
 import pandas as pd
 import numpy as np
 from scipy import stats
@@ -20,7 +22,7 @@ def fft_df(df):
         fft_out.append(fft)
 
         freq = np.fft.rfftfreq(len_sig,
-            d=1. / fs)
+                               d=1. / fs)
 
     fft_out = np.array(fft_out).T
 
@@ -57,13 +59,13 @@ def phase_df(df, isplot=False):
     return -dt[xcorr.argmax(axis=0)]
 
 
-def calc_features(df_dict, fnames):
-
+def calc_features(data_dict, keys, standardize=False):
+    print 'Deprecated. Use top_fcns.get_features()'
     freq = []
     peaks = []
     phase = []
-    for fn in fnames:
-        df = df_dict[fn]
+    for key in keys:
+        df = data_dict[key]
 
         _, _, fc = fft_df(df)
         freq.append(fc[::-1])
@@ -77,13 +79,14 @@ def calc_features(df_dict, fnames):
     columns = peak_cols + ['f1', 'f2'] + phase_cols
 
     arr = np.concatenate((peaks, freq, phase), axis=1)
-    df_out = pd.DataFrame(arr, index=fnames,
-        columns=columns)
+    feat = pd.DataFrame(arr, index=keys, columns=columns)
 
-    return df_out
+    if standardize:
+        feat = (feat - feat.mean()) / feat.std()
+
+    return feat
 
 
-# quality control
 def quality(csv_path):
     '''Calculate basic quality metrics for csv file.
     * number of rows - to find files that are too short or long enough to sample multiple times
@@ -93,10 +96,10 @@ def quality(csv_path):
     * max fraction of zero values across channels - possibly dead sensors?
     * max fraction of consecutive non-zero values - files with temporal binning issues
     '''
-    df=fop.load_emg(csv_path)
-    len_df=len(df)
+    df = fop.load_emg(csv_path)
+    len_df = len(df)
 
-    quality={
+    quality = {
         "Length": len_df,
         "Max": df[df < 15000].unstack().max(),
         "Median": df.unstack().median(),

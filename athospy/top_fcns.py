@@ -1,3 +1,5 @@
+from __future__ import division
+
 import os
 import pandas as pd
 import fnmatch
@@ -9,6 +11,10 @@ import numpy as np
 import visualization as viz
 import calcs as clc
 import fileops as fop
+
+# ML
+from sklearn import svm, metrics
+
 
 
 def label_folders(basepath, write_dst):
@@ -146,31 +152,15 @@ def split_by_personid(files, frac_apprx):
     return files_left, files_right
 
 
-def sample_data(files, n_sec):
-    '''Create dictionary of sampled data, with file ids as keys.
+def get_features(files, n_sec, standardize=False):
+    '''Sample data, calculate features, and collapse into a data frame.
     '''
-    # TODO: allow input of single series?
-    n_samp = int(41.7 * n_sec)
+    index = files.index
+    data_dict = fop.sample_data(files, n_sec)
 
-    data_dict = {}
-    ix__path = zip(files.index, files.Path)
-    for ix, csv_path in ix__path:
-        df = fop.load_emg(csv_path)
-
-        i_mid = len(df) // 2
-        i_start = i_mid - n_samp // 2
-        i_end = i_mid + n_samp // 2
-
-        data_dict[ix] = df.iloc[i_start:i_end]
-    
-    return data_dict
-
-
-def get_features(data_dict, standardize=True):
-    '''id instead of fnames...'''
     freq, peaks, phase = [], [], []
-    for fid in data_dict.iterkeys():
-        df = data_dict[fid]
+    for ix in index:
+        df = data_dict[ix]
 
         _, _, fc = clc.fft_df(df)
         freq.append(fc[::-1])
@@ -184,13 +174,30 @@ def get_features(data_dict, standardize=True):
     columns = peak_cols + ['f1', 'f2'] + phase_cols
 
     arr = np.concatenate((peaks, freq, phase), axis=1)
-    f_df = pd.DataFrame(arr,
-                        index=data_dict.keys(),
-                        columns = columns)
-    if standardize:
-        f_df = (f_df - f_df.mean()) / f_df.std()
+    feat = pd.DataFrame(arr, index=index, columns=columns)
 
-    return f_df
+    if standardize:
+        feat = (feat - feat.mean()) / feat.std()
+
+    return feat
+
+
+def prediction_report(predicted, labels, classes, plot_on=True):
+
+    avg_correct = sum(predicted==labels) / len(predicted) * 100
+    print '\npercent correct:', avg_correct
+
+    counts = labels.groupby(labels.values).count().values
+    mat = metrics.confusion_matrix(labels, predicted)
+
+    print mat
+    print metrics.classification_report(labels, predicted)
+
+    frac_predicted = (mat.T / counts).T
+    if plot_on:
+        viz.plot_confusion(frac_predicted, classes)
+
+    return avg_correct
 
 # Helper functions
 ###################################################
