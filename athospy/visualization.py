@@ -38,11 +38,11 @@ def plot_emg(df, title=''):
     return fig, ax
 
 
-def plot_qc(df_qc):
+def plot_qc(df_qc, figsize=(16, 6)):
     '''Plot distribution of quality metrics across files.
     '''
     y = np.random.randn(len(df_qc))
-    fig, ax = plt.subplots(df_qc.shape[1], figsize=(16, 6))
+    fig, ax = plt.subplots(df_qc.shape[1], figsize=figsize)
     for i, axi in enumerate(ax):
         axi.scatter(df_qc.iloc[:,i], y)
 
@@ -52,3 +52,38 @@ def plot_qc(df_qc):
         fig.tight_layout(pad=0.4)
 
     return fig, ax
+
+
+def plot_confusion(mat, classes):
+    '''Plot confusion matrix, with class labels.
+    '''
+    figsize = mpl.rcParams['figure.figsize']
+    mpl.rc('figure', figsize=(8, 8))
+
+    fig, ax = plt.subplots()
+    cax = plt.pcolor(mat, cmap=plt.cm.Blues)
+
+    mpl.rc('figure', figsize=figsize)
+
+    # put the major ticks at the middle of each cell
+    ax.set_xticks(np.arange(mat.shape[0])+0.5, minor=False)
+    ax.set_yticks(np.arange(mat.shape[1])+0.5, minor=False)
+
+    # want a more natural, table-like display
+    ax.invert_yaxis()
+    ax.xaxis.tick_top()
+
+    ax.set_xticklabels(classes, fontsize=14);
+    ax.set_yticklabels(classes);
+    
+    plt.xticks(rotation=70)
+    
+    ax.yaxis.set_label_position("right")
+    ax.set_ylabel('true')
+    ax.set_xlabel('predicted')
+    
+    ax.set_aspect(1)
+    
+    fig.colorbar(cax, label='fraction classified')
+    cax.set_clim(vmin=0,vmax=1)
+    
