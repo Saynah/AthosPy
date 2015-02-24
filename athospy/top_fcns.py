@@ -114,31 +114,31 @@ def check_quality(df_files):
     for path in df_files.Path:
         d_summ.append(clc.quality(path))
 
-    files_qc = pd.DataFrame(d_summ, index=df_files.index)
-    viz.plot_qc(files_qc)
+    df_quality = pd.DataFrame(d_summ, index=df_files.index)
+    viz.plot_qc(df_quality)
 
-    return files_qc
+    return df_quality
 
 
-def exclude_by_quality(df, files_qc, write_dst='../files_dirty.csv'):
+def exclude_by_quality(df_files, df_quality, write_dst):
     '''Remove files that don't match the quality criteria.
     Also keep a record of the removed "dirty files"
     '''
-    len_old = len(df)
+    len_old = len(df_files)
 
-    short = files_qc.Length < 500
-    repeats = files_qc.MaxFrac_repeat > 60
-    zeros = files_qc.MaxFrac_zero > 30
-    noisy = files_qc.Median > 100
+    short = df_quality.Length < 500
+    repeats = df_quality.MaxFrac_repeat > 60
+    zeros = df_quality.MaxFrac_zero > 30
+    noisy = df_quality.Median > 100
 
     is_bad = short | repeats | zeros | noisy
-    df_dirty = df[is_bad]
-    df_dirty.to_csv(write_dst)
+    df_files_dirty = df_files[is_bad]
+    df_files_dirty.to_csv(write_dst)
 
-    df = df[~is_bad]
-    print 'excluded %d files of %d' % (len_old - len(df), len_old)
+    df_files = df_files[~is_bad]
+    print 'excluded %d files of %d' % (len_old - len(df_files), len_old)
 
-    return df
+    return df_files
 
 
 def split_by_personid(files, frac_apprx):
