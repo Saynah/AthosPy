@@ -120,25 +120,34 @@ def check_quality(df_files):
     return df_quality
 
 
-def exclude_by_quality(df_files, df_quality, write_dst):
+def exclude_by_quality(df_files, df_quality, write_dir):
     '''Remove files that don't match the quality criteria.
-    Also keep a record of the removed "dirty files"
+    Also keep records of the removed files in the `write_dir` folder
     '''
-    len_old = len(df_files)
+    n_orig_files = len(df_files)
 
     short = df_quality.Length < 500
     repeats = df_quality.MaxFrac_repeat > 60
     zeros = df_quality.MaxFrac_zero > 30
     noisy = df_quality.Median > 100
 
+    try:
+        shutil.rmtree(write_dir)
+    except:
+        pass
+    os.mkdir(write_dir)
+    
+    # write list of bad files as a record
+    df_files[short].to_csv(os.path.join(write_dir, 'files_short.csv'))
+    df_files[repeats].to_csv(os.path.join(write_dir, 'files_repeats.csv'))
+    df_files[zeros].to_csv(os.path.join(write_dir, 'files_zeros.csv'))
+    df_files[noisy].to_csv(os.path.join(write_dir, 'files_noisy.csv'))
+
     is_bad = short | repeats | zeros | noisy
-    df_files_dirty = df_files[is_bad]
-    df_files_dirty.to_csv(write_dst)
-
     df_files = df_files[~is_bad]
-    print 'excluded %d files of %d' % (len_old - len(df_files), len_old)
+    print 'excluded %d files of %d' % (n_orig_files - len(df_files), n_orig_files)
 
-    return df_files
+    return df_files, is_bad
 
 
 def split_by_personid(files, frac_apprx):
@@ -234,7 +243,10 @@ def _name_to_id(S_name):
 def _rename_csvfiles(df_files, write_dir):
     '''rename csv files by file index
     '''
-    shutil.rmtree(write_dir)
+    try:
+        shutil.rmtree(write_dir)
+    except:
+        pass
     os.mkdir(write_dir)
 
     path_new = []
