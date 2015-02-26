@@ -105,6 +105,7 @@ def quality(csv_path):
         "Median": df.unstack().median(),
         "N_spikes": (df > 65000).sum().sum(),
         "MaxFrac_zero": max((df == 0).sum().divide(len_df) * 100),
-        "MaxFrac_repeat": max(((df != 0) & (df.diff() == 0)).sum().divide(len_df) * 100)
+        # "MaxFrac_repeat": max(((df != 0) & (df.diff() == 0)).sum().divide(len_df) * 100)
+        "MaxFrac_repeat": max(((df > 100) & (df.diff() == 0)).sum().divide(len_df) * 100)
     }
     return quality
