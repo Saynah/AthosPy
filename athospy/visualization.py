@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 
 def set_styles():
     '''Sets matplotlib and pyplot plotting styles
@@ -9,10 +10,11 @@ def set_styles():
     # not sure why this doesnt work if called outside of the function
     plt.style.use('ggplot')	
     mpl.rc('figure', figsize=[16, 4])
-    mpl.rc('xtick', labelsize=12) 
-    mpl.rc('ytick', labelsize=12)
-    mpl.rc('font', size=12)
-    mpl.rc('axes', titlesize=13)
+    mpl.rc('xtick', labelsize=14) 
+    mpl.rc('ytick', labelsize=14)
+    mpl.rc('font', size=14)
+    mpl.rc('axes', titlesize=14)
+    mpl.rc('legend', fontsize=12)
 
 
 def plot_emg(df, title=''):
@@ -38,15 +40,15 @@ def plot_emg(df, title=''):
     return fig, ax
 
 
-def plot_qc(df_qc, figsize=(16, 6)):
-    '''Plot distribution of quality metrics across files.
+def plot_qc(df, figsize=(16, 6)):
+    '''Plot distribution of column data in uniaxial scatter plot
     '''
-    y = np.random.randn(len(df_qc))
-    fig, ax = plt.subplots(df_qc.shape[1], figsize=figsize)
+    y = np.random.randn(len(df))
+    fig, ax = plt.subplots(df.shape[1], figsize=figsize)
     for i, axi in enumerate(ax):
-        axi.scatter(df_qc.iloc[:,i], y)
+        axi.scatter(df.iloc[:,i], y)
 
-        axi.set_title(df_qc.columns[i])
+        axi.set_title(df.columns[i])
         axi.set_yticks([])
         axi.get_xaxis().set_tick_params(direction='in')
         fig.tight_layout(pad=0.4)
@@ -87,3 +89,31 @@ def plot_confusion(mat, classes):
     fig.colorbar(cax, label='fraction classified')
     cax.set_clim(vmin=0,vmax=1)
     
+
+def plot_feature_scatter(df_feat, df_files, write_dst=''):
+    '''Plot scatter matrix for all features.
+    Save Exercise-labeled version of scatter plot for inspection'''
+    
+    # visualize features in the test set
+    ax = pd.scatter_matrix(df_feat, alpha=0.2, figsize=(15, 15), diagonal='kde');
+
+    # remove axis labels
+    for axi in ax:
+        for axij in axi:    
+            axij.set_yticks([])
+            axij.set_xticks([])
+
+    if write_dst:
+        # also create and save a version of this plot with points colored by exercise label
+        df_labeled = df_feat.join(df_files.Exercise)
+
+        g = sns.PairGrid(df_labeled, hue="Exercise")
+        g.map_upper(plt.scatter, alpha=0.2)
+        g.map_diag(plt.hist)
+        # g.map_lower(sns.kdeplot, alpha=0.2, cmap='Greys_d')  # trouble calculating the kde
+
+        g.add_legend()
+        g.savefig(write_dst)
+        plt.close() # don't create the plot here
+
+    return ax

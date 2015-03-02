@@ -147,7 +147,7 @@ def exclude_by_quality(df_files, df_quality, write_dir):
     df_files = df_files[~is_bad]
     print 'excluded %d files of %d' % (n_orig_files - len(df_files), n_orig_files)
 
-    return df_files, is_bad
+    return df_files
 
 
 def split_by_personid(files, frac_apprx):
@@ -191,7 +191,7 @@ def get_features(files, n_sec, standardize=False):
     return feat
 
 
-def prediction_report(predicted, labels, classes, plot_on=True):
+def prediction_report(predicted, labels, classes, plot_on=True, print_mat=''):
 
     avg_correct = sum(predicted==labels) / len(predicted) * 100
     print '\npercent correct:', avg_correct
@@ -199,12 +199,17 @@ def prediction_report(predicted, labels, classes, plot_on=True):
     counts = labels.groupby(labels.values).count().values
     mat = metrics.confusion_matrix(labels, predicted)
 
-    print mat
+    # print mat
     print metrics.classification_report(labels, predicted)
 
     frac_predicted = (mat.T / counts).T
     if plot_on:
         viz.plot_confusion(frac_predicted, classes)
+
+    if print_mat == 'mat':
+        print mat
+    elif print_mat == 'frac':
+        print frac_predicted
 
     return avg_correct
 
